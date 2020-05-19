@@ -1,0 +1,3 @@
+[submodule "lib/niftfy-core"]
+	path = lib/niftfy-core
+	url = git@github.com:raugfer/niftfy-core.git
