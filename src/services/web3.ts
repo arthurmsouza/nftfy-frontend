@@ -1,7 +1,12 @@
 import Web3 from 'web3';
 
 declare global {
-  interface Window { web3: any; }
+  interface Window { ethereum: any; web3: any; }
+}
+
+if (window.ethereum) {
+  window.web3 = new Web3(window.ethereum);
+  window.ethereum.enable(); // should wait?
 }
 
 if (!window.web3) throw new Error('No web3? You should consider trying MetaMask!');
