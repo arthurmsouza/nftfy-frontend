@@ -5,7 +5,8 @@
   "description": "An ERC-721/ERC-20 Securitizer",
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build"
+    "build": "react-scripts build",
+    "build-contracts": "solcjs --abi -o src/contracts/ lib/niftfy-core/src/*.sol"
   },
   "repository": {
     "type": "git",
