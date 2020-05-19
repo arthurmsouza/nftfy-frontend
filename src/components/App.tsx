@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import {
 //  approveAllowance,
   getAccounts,
-/*  getBalance,
+  getBalance,
+/*
   getDueDate,
   getTokenBalance,
   getTokenAllowance,
@@ -11,27 +12,28 @@ import {
   getTokenPayoutRate,
   investmentFund,
   investmentDefund,
-  placeBet,*/
+  placeBet,
+*/
 } from '../services/web3';
 
-/*
 function ApproveForm({ account }: { account?: string }) {
-  const [amount, setAmount] = useState('');
-  const [balance, setBalance] = useState('');
-  const [allowance, setAllowance] = useState('');
+//  const [amount, setAmount] = useState('');
+//  const [balance, setBalance] = useState('');
+//  const [allowance, setAllowance] = useState('');
   const [ethBalance, setEthBalance] = useState('');
   useEffect(() => {
     if (!account) return;
-    (async () => setBalance(await getTokenBalance(account)))();
-    (async () => setAllowance(await getTokenAllowance(account)))();
+//    (async () => setBalance(await getTokenBalance(account)))();
+//    (async () => setAllowance(await getTokenAllowance(account)))();
     (async () => setEthBalance(await getBalance(account)))();
   }, [account]);
   async function onSubmit(event: React.FormEvent) {
     if (event) event.preventDefault();
     if (!account) return;
-    await approveAllowance(account, amount);
-    setAllowance(amount);
+//    await approveAllowance(account, amount);
+//    setAllowance(amount);
   }
+/*
   return (
     <form className="ApproveForm" onSubmit={onSubmit}>
       <fieldset disabled={!account}>
@@ -39,12 +41,20 @@ function ApproveForm({ account }: { account?: string }) {
         <button type="submit">Approve</button>&nbsp;
         <label>Token Balance</label> {balance}&nbsp;
         <label>Token Allowance</label> {allowance}&nbsp;
+      </fieldset>
+    </form>
+  );
+*/
+  return (
+    <form className="ApproveForm" onSubmit={onSubmit}>
+      <fieldset disabled={!account}>
         <label>Ether Balance</label> {ethBalance}
       </fieldset>
     </form>
   );
 }
 
+/*
 function BetForm({ account }: { account?: string }) {
   const limit = 10000;
   const [amount, setAmount] = useState('1');
@@ -140,7 +150,6 @@ function App() {
 /*
   return (
     <div className="App">
-      <ApproveForm account={(accounts || [])[0]} />
       <BetForm account={(accounts || [])[0]} />
       <FundingForm account={(accounts || [])[0]} />
     </div>
@@ -148,6 +157,7 @@ function App() {
 */
   return (
     <div className="App">
+      <ApproveForm account={(accounts || [])[0]} />
     </div>
   );
 }

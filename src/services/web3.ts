@@ -32,7 +32,7 @@ export async function getAccounts(): Promise<string[]> {
     });
   });
 }
-/*
+
 export async function getBalance(address: string): Promise<string> {
   return new Promise((resolve, reject) => {
     web3.eth.getBalance(address, 'latest', (error, balance) => {
@@ -42,6 +42,7 @@ export async function getBalance(address: string): Promise<string> {
   });
 }
 
+/*
 export async function getTokenDecimals(): Promise<number> {
   return Number(await token.methods.decimals().call());
 }
