@@ -12,11 +12,11 @@ if (window.ethereum) {
 if (!window.web3) throw new Error('No web3? You should consider trying MetaMask!');
 
 const web3 = new Web3(window.web3.currentProvider);
-/*
-const tokenAddress = '0xbdb9f92b0e432aadde3566a7c8f71ab6b12c11cc';
-const tokenAbi = require('../contracts/Token.json');
-const token = new web3.eth.Contract(tokenAbi, tokenAddress);
 
+const tokenAddress = '0xbdb9f92b0e432aadde3566a7c8f71ab6b12c11cc';
+const tokenAbi = require('../contracts/ERC20.json');
+const token = new web3.eth.Contract(tokenAbi, tokenAddress);
+/*
 const dappAddress = '0x00f650a9151c2666bb672b2f1e7759894e4d98b9';
 const dappAbi = require('../contracts/HiLoDApp.json');
 const dapp = new web3.eth.Contract(dappAbi, dappAddress);
@@ -46,18 +46,19 @@ export async function getBalance(address: string): Promise<string> {
     });
   });
 }
-
 /*
 export async function getTokenDecimals(): Promise<number> {
   return Number(await token.methods.decimals().call());
 }
-
+*/
 export async function getTokenBalance(address: string): Promise<string> {
-  const decimals = await getTokenDecimals();
+//  const decimals = await getTokenDecimals();
   const balance = await token.methods.balanceOf(address).call();
-  return fromCents(balance, decimals);
+  return balance;
+//  return fromCents(balance, decimals);
 }
 
+/*
 export async function getTokenAllowance(address: string): Promise<string> {
   const decimals = await getTokenDecimals();
   const allowance = await token.methods.allowance(address, dappAddress).call();

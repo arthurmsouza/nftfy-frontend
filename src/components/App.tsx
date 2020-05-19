@@ -5,7 +5,9 @@ import {
   getBalance,
 /*
   getDueDate,
+*/
   getTokenBalance,
+/*
   getTokenAllowance,
   getTokenInvestment,
   getTokenMaxPrize,
@@ -18,12 +20,12 @@ import {
 
 function ApproveForm({ account }: { account?: string }) {
 //  const [amount, setAmount] = useState('');
-//  const [balance, setBalance] = useState('');
+  const [balance, setBalance] = useState('');
 //  const [allowance, setAllowance] = useState('');
   const [ethBalance, setEthBalance] = useState('');
   useEffect(() => {
     if (!account) return;
-//    (async () => setBalance(await getTokenBalance(account)))();
+    (async () => setBalance(await getTokenBalance(account)))();
 //    (async () => setAllowance(await getTokenAllowance(account)))();
     (async () => setEthBalance(await getBalance(account)))();
   }, [account]);
@@ -39,7 +41,6 @@ function ApproveForm({ account }: { account?: string }) {
       <fieldset disabled={!account}>
         <input name="amount" type="number" value={amount} min="0" placeholder="0" step="0.01" onChange={(e) => setAmount(e.target.value)} />
         <button type="submit">Approve</button>&nbsp;
-        <label>Token Balance</label> {balance}&nbsp;
         <label>Token Allowance</label> {allowance}&nbsp;
       </fieldset>
     </form>
@@ -48,6 +49,7 @@ function ApproveForm({ account }: { account?: string }) {
   return (
     <form className="ApproveForm" onSubmit={onSubmit}>
       <fieldset disabled={!account}>
+        <label>Token Balance</label> {balance}&nbsp;
         <label>Ether Balance</label> {ethBalance}
       </fieldset>
     </form>
