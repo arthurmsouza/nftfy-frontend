@@ -1,2 +1,2 @@
-# niftfy-frontend
-An open-source frontend for Niftfy.
+# nftfy-frontend
+An open-source frontend for Nftfy.
