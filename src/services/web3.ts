@@ -13,6 +13,10 @@ if (!window.web3) throw new Error('No web3? You should consider trying MetaMask!
 
 const web3 = new Web3(window.web3.currentProvider);
 
+export function isValidAddress(address: string): boolean {
+  return web3.utils.isAddress(address);
+}
+
 const tokenAddress = '0xbdb9f92b0e432aadde3566a7c8f71ab6b12c11cc';
 const tokenAbi = require('../contracts/ERC20.json');
 const token = new web3.eth.Contract(tokenAbi, tokenAddress);

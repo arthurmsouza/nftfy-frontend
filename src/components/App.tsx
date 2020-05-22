@@ -3,11 +3,10 @@ import {
 //  approveAllowance,
   getAccounts,
   getBalance,
+  isValidAddress,
 /*
   getDueDate,
-*/
   getTokenBalance,
-/*
   getTokenAllowance,
   getTokenInvestment,
   getTokenMaxPrize,
@@ -145,6 +144,34 @@ function FundingForm({ account }: { account?: string }) {
 }
 */
 
+function Erc20Wallet() {
+  const [contracts, setContracts] = useState<string[]>([]);
+  const [formAddress, setFormAddress] = useState('');
+  async function onFormSubmit(event: React.FormEvent) {
+    if (event) event.preventDefault();
+    if (!isValidAddress(formAddress)) return;
+    const address = formAddress.toLowerCase()
+    if (contracts.includes(address)) return;
+    setContracts(contracts.concat([address]));
+  }
+  return (
+    <div>
+      <form onSubmit={onFormSubmit}>
+        <input name="address" type="string" onChange={(e) => setFormAddress(e.target.value)} />
+        <button type="submit">Add ERC-20 Token</button>
+      </form>
+      {contracts.length > 0
+        ? (<div>
+            {contracts.map((contract, i) =>
+              <div key={i}>{contract}</div>
+            )}
+          </div>)
+        : 'Empty token list'
+      }
+    </div>
+  );
+}
+
 function AccountPanel({ account }: { account: string }) {
   const [ethBalance, setEthBalance] = useState('');
   useEffect(() => {
@@ -155,13 +182,14 @@ function AccountPanel({ account }: { account: string }) {
   return (
     <div className="AccountPanel">
       <label>Ether Balance</label> {ethBalance}
+      <Erc20Wallet />
     </div>
   );
 }
 
 function App() {
   const [accounts, setAccounts] = useState<string[] | null>(null);
-  const [account, setAccount] = useState<string>('');
+  const [account, setAccount] = useState('');
   useEffect(() => {
     (async () => setAccounts(await getAccounts()))();
   }, []);
