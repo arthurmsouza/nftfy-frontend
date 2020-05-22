@@ -2,10 +2,49 @@ import React, { useEffect, useState } from 'react';
 import {
   isValidAddress,
   getAccounts,
-  getAccountBalance,
+  getETHBalance,
   getERC20Balance,
+  transferETH,
   transferERC20,
 } from '../services/web3';
+
+function ETHPanel({ account }: { account: string }) {
+  const [balance, setBalance] = useState('');
+  useEffect(() => { updateBalance() }, [account]);
+  async function updateBalance() {
+    setBalance(await getETHBalance(account));
+  }
+  async function onTransfer(address: string, amount: string) {
+    await transferETH(account, address, amount);
+    await updateBalance();
+  }
+  return (
+    <div>
+      {account}<br/>
+      <label>Eth Balance</label> {balance}
+      <ETHTransferForm onTransfer={onTransfer} />
+    </div>
+  );
+}
+
+function ETHTransferForm({ onTransfer } : { onTransfer: (address: string, amount: string) => Promise<void> }) {
+  const [address, setAddress] = useState('');
+  const [amount, setAmount] = useState('');
+  async function onSubmit(event: React.FormEvent) {
+    if (event) event.preventDefault();
+    if (!isValidAddress(address)) return;
+    await onTransfer(address, amount);
+    setAddress('');
+    setAmount('');
+  }
+  return (
+      <form onSubmit={onSubmit}>
+        <input name="address" type="string" value={address} onChange={(e) => setAddress(e.target.value)} />
+        <input name="amount" type="string" value={amount} onChange={(e) => setAmount(e.target.value)} />
+        <button type="submit">Transfer</button>
+      </form>
+  );
+}
 
 function ERC20Panel({ account, contract }: { account: string; contract: string }) {
   const [balance, setBalance] = useState('');
@@ -81,13 +120,9 @@ function ERC20Wallet({ account }: { account: string }) {
 }
 
 function AccountPanel({ account }: { account: string }) {
-  const [balance, setBalance] = useState('');
-  useEffect(() => {
-    (async () => setBalance(await getAccountBalance(account)))();
-  }, [account]);
   return (
     <div className="AccountPanel">
-      <label>Ether Balance</label> {balance}
+      <ETHPanel account={account} />
       <ERC20Wallet account={account} />
     </div>
   );

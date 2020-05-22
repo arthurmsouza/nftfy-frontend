@@ -39,12 +39,20 @@ export async function getAccounts(): Promise<string[]> {
   });
 }
 
-export async function getAccountBalance(address: string): Promise<string> {
+export async function getETHBalance(address: string): Promise<string> {
   return new Promise((resolve, reject) => {
     web3.eth.getBalance(address, 'latest', (error, balance) => {
       if (error) return reject(error);
       return resolve(web3.utils.fromWei(balance, 'ether'));
     });
+  });
+}
+
+export async function transferETH(account: string, address: string, amount: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    web3.eth.sendTransaction({ from: account, to: address, value: web3.utils.toWei(amount, 'ether') })
+      .once('confirmation', (confNumber: any, receipt: any) => resolve())
+      .once('error', reject);
   });
 }
 
