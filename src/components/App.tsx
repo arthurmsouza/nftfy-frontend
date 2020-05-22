@@ -3,8 +3,10 @@ import {
   isValidAddress,
   getAccounts,
   getETHBalance,
-  getERC20Balance,
   transferETH,
+  getERC20Name,
+  getERC20Symbol,
+  getERC20Balance,
   transferERC20,
 } from '../services/web3';
 
@@ -20,8 +22,8 @@ function ETHPanel({ account }: { account: string }) {
   }
   return (
     <div>
-      {account}<br/>
-      <label>Eth Balance</label> {balance}
+      Ethereum {account}<br/>
+      <label>Balance</label> {balance} ETH
       <ETHTransferForm onTransfer={onTransfer} />
     </div>
   );
@@ -47,10 +49,20 @@ function ETHTransferForm({ onTransfer } : { onTransfer: (address: string, amount
 }
 
 function ERC20Panel({ account, contract }: { account: string; contract: string }) {
+  const [name, setName] = useState('');
+  const [_symbol, setSymbol] = useState('');
   const [balance, setBalance] = useState('');
-  useEffect(() => { updateBalance() }, [contract, account]);
+  useEffect(() => { updateName() }, [contract]);
+  useEffect(() => { updateSymbol() }, [contract]);
+  useEffect(() => { updateBalance() }, [account, contract]);
+  async function updateName() {
+    setName(await getERC20Name(contract));
+  }
+  async function updateSymbol() {
+    setSymbol(await getERC20Symbol(contract));
+  }
   async function updateBalance() {
-    setBalance(await getERC20Balance(contract, account));
+    setBalance(await getERC20Balance(account, contract));
   }
   async function onTransfer(address: string, amount: string) {
     await transferERC20(account, contract, address, amount);
@@ -58,8 +70,8 @@ function ERC20Panel({ account, contract }: { account: string; contract: string }
   }
   return (
     <div>
-      {contract}<br/>
-      <label>Token Balance</label> {balance}
+      {name} {contract}<br/>
+      <label>Balance</label> {balance} {_symbol}
       <ERC20TransferForm onTransfer={onTransfer} />
     </div>
   );
@@ -108,13 +120,13 @@ function ERC20Wallet({ account }: { account: string }) {
   }
   return (
     <div>
-      <ERC20AddForm onAddToken={onAddToken} />
       {contracts.length > 0
         ? contracts.map((contract, i) =>
             <ERC20Panel key={i} account={account} contract={contract} />
           )
         : 'Empty token list'
       }
+      <ERC20AddForm onAddToken={onAddToken} />
     </div>
   );
 }

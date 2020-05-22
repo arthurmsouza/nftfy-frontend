@@ -56,6 +56,16 @@ export async function transferETH(account: string, address: string, amount: stri
   });
 }
 
+async function ERC20_name(contract: string): Promise<string> {
+  const abi = new web3.eth.Contract(ERC20_METADATA_ABI, contract);
+  return abi.methods.name().call();
+}
+
+async function ERC20_symbol(contract: string): Promise<string> {
+  const abi = new web3.eth.Contract(ERC20_METADATA_ABI, contract);
+  return abi.methods.symbol().call();
+}
+
 async function ERC20_decimals(contract: string): Promise<number> {
   const abi = new web3.eth.Contract(ERC20_METADATA_ABI, contract);
   return Number(await abi.methods.decimals().call());
@@ -63,10 +73,10 @@ async function ERC20_decimals(contract: string): Promise<number> {
 
 async function ERC20_balanceOf(contract: string, address: string): Promise<string> {
   const abi = new web3.eth.Contract(ERC20_ABI, contract);
-  return await abi.methods.balanceOf(address).call();
+  return abi.methods.balanceOf(address).call();
 }
 
-export async function ERC20_transfer(account: string, contract: string, address: string, amount: string): Promise<void> {
+async function ERC20_transfer(account: string, contract: string, address: string, amount: string): Promise<void> {
   const abi = new web3.eth.Contract(ERC20_ABI, contract);
   return new Promise((resolve, reject) => {
     abi.methods.transfer(address, amount)
@@ -76,9 +86,17 @@ export async function ERC20_transfer(account: string, contract: string, address:
   });
 }
 
-export async function getERC20Balance(contract: string, address: string): Promise<string> {
+export async function getERC20Name(contract: string): Promise<string> {
+  return ERC20_name(contract);
+}
+
+export async function getERC20Symbol(contract: string): Promise<string> {
+  return ERC20_symbol(contract);
+}
+
+export async function getERC20Balance(account: string, contract: string): Promise<string> {
   const decimals = await ERC20_decimals(contract);
-  const balance = await ERC20_balanceOf(contract, address);
+  const balance = await ERC20_balanceOf(contract, account);
   return fromCents(balance, decimals);
 }
 
