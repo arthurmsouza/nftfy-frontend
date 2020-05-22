@@ -77,22 +77,6 @@ function ERC20Panel({ account, contract }: { account: string; contract: string }
   );
 }
 
-function ERC20AddForm({ onAddToken } : { onAddToken: (contract: string) => Promise<void> }) {
-  const [address, setAddress] = useState('');
-  async function onSubmit(event: React.FormEvent) {
-    if (event) event.preventDefault();
-    if (!isValidAddress(address)) return;
-    await onAddToken(address);
-    setAddress('');
-  }
-  return (
-      <form onSubmit={onSubmit}>
-        <input name="address" type="string" value={address} onChange={(e) => setAddress(e.target.value)} />
-        <button type="submit">Add ERC-20 Token</button>
-      </form>
-  );
-}
-
 function ERC20TransferForm({ onTransfer } : { onTransfer: (address: string, amount: string) => Promise<void> }) {
   const [address, setAddress] = useState('');
   const [amount, setAmount] = useState('');
@@ -112,14 +96,33 @@ function ERC20TransferForm({ onTransfer } : { onTransfer: (address: string, amou
   );
 }
 
-function ERC20Wallet({ account }: { account: string }) {
+function ERC20AddForm({ onAddToken } : { onAddToken: (contract: string) => Promise<void> }) {
+  const [address, setAddress] = useState('');
+  async function onSubmit(event: React.FormEvent) {
+    if (event) event.preventDefault();
+    if (!isValidAddress(address)) return;
+    await onAddToken(address);
+    setAddress('');
+  }
+  return (
+      <form onSubmit={onSubmit}>
+        <input name="address" type="string" value={address} onChange={(e) => setAddress(e.target.value)} />
+        <button type="submit">Add ERC-20 Token</button>
+      </form>
+  );
+}
+
+function Wallet({ account }: { account: string }) {
   const [contracts, setContracts] = useState<string[]>([]);
   async function onAddToken(contract: string) {
     // TODO check if implements ERC-20 interface
-    if (!contracts.includes(contract)) setContracts(contracts.concat([contract]));
+    if (!contracts.includes(contract)) {
+      setContracts(contracts.concat([contract]));
+    }
   }
   return (
     <div>
+      <ETHPanel account={account} />
       {contracts.length > 0
         ? contracts.map((contract, i) =>
             <ERC20Panel key={i} account={account} contract={contract} />
@@ -134,8 +137,7 @@ function ERC20Wallet({ account }: { account: string }) {
 function AccountPanel({ account }: { account: string }) {
   return (
     <div className="AccountPanel">
-      <ETHPanel account={account} />
-      <ERC20Wallet account={account} />
+      <Wallet account={account} />
     </div>
   );
 }
