@@ -121,6 +121,11 @@ async function ERC721_symbol(contract: string): Promise<string> {
   return abi.methods.symbol().call();
 }
 
+async function ERC721_tokenURI(contract: string, tokenId: string): Promise<string> {
+  const abi = new web3.eth.Contract(ERC721_METADATA_ABI, contract);
+  return abi.methods.tokenURI(tokenId).call();
+}
+
 async function ERC721_balanceOf(contract: string, address: string): Promise<string> {
   const abi = new web3.eth.Contract(ERC721_ABI, contract);
   return abi.methods.balanceOf(address).call();
@@ -147,6 +152,10 @@ export async function getERC721Name(contract: string): Promise<string> {
 
 export async function getERC721Symbol(contract: string): Promise<string> {
   return ERC721_symbol(contract);
+}
+
+export async function getERC721TokenURI(contract: string, tokenId: string): Promise<string> {
+  return ERC721_tokenURI(contract, tokenId);
 }
 
 export async function getERC721Balance(account: string, contract: string): Promise<string> {

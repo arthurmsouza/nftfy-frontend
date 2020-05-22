@@ -10,6 +10,7 @@ import {
   transferERC20,
   getERC721Name,
   getERC721Symbol,
+  getERC721TokenURI,
   getERC721Balance,
   getERC721TokenIdByIndex,
   transferERC721,
@@ -106,7 +107,7 @@ function ERC721Panel({ account, contract }: { account: string; contract: string 
   const [name, setName] = useState('');
   const [_symbol, setSymbol] = useState('');
   const [balance, setBalance] = useState('');
-  const [tokens, setTokens] = useState<string[]>([]);
+  const [tokens, setTokens] = useState<{ [token: string]: string }>({});
   useEffect(() => { updateName() }, [contract]);
   useEffect(() => { updateSymbol() }, [contract]);
   useEffect(() => { updateBalance() }, [account, contract]);
@@ -118,10 +119,11 @@ function ERC721Panel({ account, contract }: { account: string; contract: string 
   }
   async function updateBalance() {
     const balance = await getERC721Balance(account, contract);
-    const tokens: string[] = [];
+    const tokens: { [token: string]: string } = {};
     for (let i = 0; i < Number(balance); i++) {
       const tokenId = await getERC721TokenIdByIndex(account, contract, i);
-      tokens.push(tokenId);
+      const tokenURI = await getERC721TokenURI(contract, tokenId);
+      tokens[tokenId] = tokenURI;
     }
     setBalance(balance);
     setTokens(tokens);
@@ -134,8 +136,8 @@ function ERC721Panel({ account, contract }: { account: string; contract: string 
     <div>
       {name} {contract}<br/>
       <label>Balance</label> {balance} {_symbol}
-      {tokens.map((token, i) =>
-        <div key={i}>Token {token}</div>
+      {Object.keys(tokens).map((token, i) =>
+        <div key={i}>Token {token} {tokens[token]}</div>
       )}
       <ERC721TransferForm onTransfer={onTransfer} />
     </div>
