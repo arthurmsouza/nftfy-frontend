@@ -20,9 +20,9 @@ const ERC721_ABI = require('../contracts/ERC721.json');
 const ERC721_ENUMERABLE_ABI = require('../contracts/ERC721Enumerable.json');
 const ERC165_ABI = require('../contracts/ERC165.json');
 
-const ERC721_METADATA_INTERFACE_ID = '0x5b5e139f';
+// const ERC721_METADATA_INTERFACE_ID = '0x5b5e139f';
 const ERC721_INTERFACE_ID = '0x80ac58cd';
-const ERC721_ENUMERABLE_INTERFACE_ID = '0x780e9d63';
+// const ERC721_ENUMERABLE_INTERFACE_ID = '0x780e9d63';
 
 function toCents(amount: string, decimals: number): string {
   return (Number(amount) * (10 ** decimals)).toFixed(0);
@@ -179,81 +179,3 @@ async function ERC165_supportsInterface(contract: string, interfaceId: string): 
   const abi = new web3.eth.Contract(ERC165_ABI, contract);
   return abi.methods.supportsInterface(interfaceId).call();
 }
-
-/*
-const dappAddress = '0x00f650a9151c2666bb672b2f1e7759894e4d98b9';
-const dappAbi = require('../contracts/HiLoDApp.json');
-const dapp = new web3.eth.Contract(dappAbi, dappAddress);
-
-*/
-
-/*
-export async function getTokenAllowance(address: string): Promise<string> {
-  const decimals = await getTokenDecimals();
-  const allowance = await token.methods.allowance(address, dappAddress).call();
-  return fromCents(allowance, decimals);
-}
-
-export async function approveAllowance(address: string, amount: string): Promise<void> {
-  const decimals = await getTokenDecimals();
-  return new Promise((resolve, reject) => {
-    token.methods.approve(dappAddress, toCents(amount, decimals))
-      .send({ from: address })
-      .once('confirmation', (confNumber, receipt) => resolve())
-      .once('error', reject);
-  });
-}
-
-export async function getTokenMaxPrize(): Promise<string> {
-  const decimals = await getTokenDecimals();
-  const prize = await dapp.methods.maxPrize(tokenAddress).call();
-  return fromCents(prize, decimals);
-}
-
-export async function getTokenInvestment(address: string): Promise<string> {
-  const decimals = await getTokenDecimals();
-  const investment = await dapp.methods.investmentOf(address, tokenAddress).call();
-  return fromCents(investment, decimals);
-}
-
-export async function getDueDate(address: string): Promise<string> {
-  const dueDate = await dapp.methods.dueDateOf(address).call();
-  return new Date(1000 * dueDate).toISOString();
-}
-
-export async function getTokenPayoutRate(): Promise<string> {
-  const { _balance, _funds } = await dapp.methods.payoutRate(tokenAddress).call();
-  if (Number(_funds) === 0) return '0.00%';
-  return (100 * Number(_balance) / Number(_funds)).toFixed(2) + '%';
-}
-
-export async function investmentFund(address: string, amount: string): Promise<void> {
-  const decimals = await getTokenDecimals();
-  return new Promise((resolve, reject) => {
-    dapp.methods.fund(toCents(amount, decimals), tokenAddress)
-      .send({ from: address })
-      .once('confirmation', (confNumber, receipt) => resolve())
-      .once('error', reject);
-  });
-}
-
-export async function investmentDefund(address: string, amount: string): Promise<void> {
-  const decimals = await getTokenDecimals();
-  return new Promise((resolve, reject) => {
-    dapp.methods.defund(toCents(amount, decimals), tokenAddress)
-      .send({ from: address })
-      .once('confirmation', (confNumber, receipt) => resolve())
-      .once('error', reject);
-  });
-}
-
-export async function placeBet(address: string, amount: string, low: number, high: number, limit: number): Promise<void> {
-  const decimals = await getTokenDecimals();
-  return new Promise((resolve, reject) => {
-    dapp.methods.bet(String(low), String(high), String(limit), toCents(amount, decimals), tokenAddress)
-      .send({ from: address })
-      .once('confirmation', (confNumber, receipt) => resolve())
-      .once('error', reject);
-  });
-}
-*/
