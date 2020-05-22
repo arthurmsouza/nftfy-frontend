@@ -18,6 +18,7 @@ import {
 */
 } from '../services/web3';
 
+/*
 function ApproveForm({ account }: { account?: string }) {
 //  const [amount, setAmount] = useState('');
   const [balance, setBalance] = useState('');
@@ -35,7 +36,6 @@ function ApproveForm({ account }: { account?: string }) {
 //    await approveAllowance(account, amount);
 //    setAllowance(amount);
   }
-/*
   return (
     <form className="ApproveForm" onSubmit={onSubmit}>
       <fieldset disabled={!account}>
@@ -45,7 +45,6 @@ function ApproveForm({ account }: { account?: string }) {
       </fieldset>
     </form>
   );
-*/
   return (
     <form className="ApproveForm" onSubmit={onSubmit}>
       <fieldset disabled={!account}>
@@ -55,6 +54,7 @@ function ApproveForm({ account }: { account?: string }) {
     </form>
   );
 }
+*/
 
 /*
 function BetForm({ account }: { account?: string }) {
@@ -144,22 +144,50 @@ function FundingForm({ account }: { account?: string }) {
   );
 }
 */
-function App() {
-  const [accounts, setAccounts] = useState<string[] | null>(null);
+
+function AccountPanel({ account }: { account: string }) {
+  const [ethBalance, setEthBalance] = useState('');
   useEffect(() => {
-    (async () => setAccounts(await getAccounts()))();
-  });
-/*
+//    (async () => setBalance(await getTokenBalance(account)))();
+//    (async () => setAllowance(await getTokenAllowance(account)))();
+    (async () => setEthBalance(await getBalance(account)))();
+  }, [account]);
   return (
-    <div className="App">
-      <BetForm account={(accounts || [])[0]} />
-      <FundingForm account={(accounts || [])[0]} />
+    <div className="AccountPanel">
+      <label>Ether Balance</label> {ethBalance}
     </div>
   );
-*/
+}
+
+function App() {
+  const [accounts, setAccounts] = useState<string[] | null>(null);
+  const [account, setAccount] = useState<string>('');
+  useEffect(() => {
+    (async () => setAccounts(await getAccounts()))();
+  }, []);
+  useEffect(() => {
+    if (accounts === null) return;
+    if (accounts.length === 0) return;
+    setAccount(accounts[0]);
+  }, [accounts])
   return (
     <div className="App">
-      <ApproveForm account={(accounts || [])[0]} />
+      {accounts
+        ? (<select onChange={(e) => setAccount(e.target.value)} value={account}>
+            {account === ''
+              ? (<option key={0} value={''}>No account selected</option>)
+              : null
+            }
+            {accounts.map((account, i) =>
+              <option key={i+1} value={account}>{account}</option>
+            )}
+          </select>)
+        : 'No accounts available'
+      }
+      {account
+        ? <AccountPanel account={account} />
+        : null
+      }
     </div>
   );
 }
