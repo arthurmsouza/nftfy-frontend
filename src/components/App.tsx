@@ -8,6 +8,12 @@ import {
   getERC20Symbol,
   getERC20Balance,
   transferERC20,
+  getERC721Name,
+  getERC721Symbol,
+  getERC721Balance,
+  getERC721TokenIdByIndex,
+  transferERC721,
+  supportsERC721,
 } from '../services/web3';
 
 function ETHPanel({ account }: { account: string }) {
@@ -88,15 +94,74 @@ function ERC20TransferForm({ onTransfer } : { onTransfer: (address: string, amou
     setAmount('');
   }
   return (
-      <form onSubmit={onSubmit}>
-        <input name="address" type="string" value={address} onChange={(e) => setAddress(e.target.value)} />
-        <input name="amount" type="string" value={amount} onChange={(e) => setAmount(e.target.value)} />
-        <button type="submit">Transfer</button>
-      </form>
+    <form onSubmit={onSubmit}>
+      <input name="address" type="string" value={address} onChange={(e) => setAddress(e.target.value)} />
+      <input name="amount" type="string" value={amount} onChange={(e) => setAmount(e.target.value)} />
+      <button type="submit">Transfer</button>
+    </form>
   );
 }
 
-function ERC20AddForm({ onAddToken } : { onAddToken: (contract: string) => Promise<void> }) {
+function ERC721Panel({ account, contract }: { account: string; contract: string }) {
+  const [name, setName] = useState('');
+  const [_symbol, setSymbol] = useState('');
+  const [balance, setBalance] = useState('');
+  const [tokens, setTokens] = useState<string[]>([]);
+  useEffect(() => { updateName() }, [contract]);
+  useEffect(() => { updateSymbol() }, [contract]);
+  useEffect(() => { updateBalance() }, [account, contract]);
+  async function updateName() {
+    setName(await getERC721Name(contract));
+  }
+  async function updateSymbol() {
+    setSymbol(await getERC721Symbol(contract));
+  }
+  async function updateBalance() {
+    const balance = await getERC721Balance(account, contract);
+    const tokens: string[] = [];
+    for (let i = 0; i < Number(balance); i++) {
+      const tokenId = await getERC721TokenIdByIndex(account, contract, i);
+      tokens.push(tokenId);
+    }
+    setBalance(balance);
+    setTokens(tokens);
+  }
+  async function onTransfer(address: string, tokenId: string) {
+    await transferERC721(account, contract, address, tokenId, '0x');
+    await updateBalance();
+  }
+  return (
+    <div>
+      {name} {contract}<br/>
+      <label>Balance</label> {balance} {_symbol}
+      {tokens.map((token, i) =>
+        <div key={i}>Token {token}</div>
+      )}
+      <ERC721TransferForm onTransfer={onTransfer} />
+    </div>
+  );
+}
+
+function ERC721TransferForm({ onTransfer } : { onTransfer: (address: string, tokenId: string) => Promise<void> }) {
+  const [address, setAddress] = useState('');
+  const [tokenId, setTokenId] = useState('');
+  async function onSubmit(event: React.FormEvent) {
+    if (event) event.preventDefault();
+    if (!isValidAddress(address)) return;
+    await onTransfer(address, tokenId);
+    setAddress('');
+    setTokenId('');
+  }
+  return (
+    <form onSubmit={onSubmit}>
+      <input name="address" type="string" value={address} onChange={(e) => setAddress(e.target.value)} />
+      <input name="tokenId" type="string" value={tokenId} onChange={(e) => setTokenId(e.target.value)} />
+      <button type="submit">Transfer</button>
+    </form>
+  );
+}
+
+function AddTokenForm({ onAddToken } : { onAddToken: (contract: string) => Promise<void> }) {
   const [address, setAddress] = useState('');
   async function onSubmit(event: React.FormEvent) {
     if (event) event.preventDefault();
@@ -107,29 +172,39 @@ function ERC20AddForm({ onAddToken } : { onAddToken: (contract: string) => Promi
   return (
       <form onSubmit={onSubmit}>
         <input name="address" type="string" value={address} onChange={(e) => setAddress(e.target.value)} />
-        <button type="submit">Add ERC-20 Token</button>
+        <button type="submit">Add Token</button>
       </form>
   );
 }
 
 function Wallet({ account }: { account: string }) {
-  const [contracts, setContracts] = useState<string[]>([]);
+  const [contracts, setContracts] = useState<{ [address: string]: 'ERC20' | 'ERC721' }>({});
   async function onAddToken(contract: string) {
-    // TODO check if implements ERC-20 interface
-    if (!contracts.includes(contract)) {
-      setContracts(contracts.concat([contract]));
-    }
+    const address = contract.toLowerCase();
+    if (contracts[address]) return;
+    let isNFT = false;
+    try { isNFT = await supportsERC721(contract); } catch (e) { }
+    setContracts({ ...contracts, [address]: isNFT ? 'ERC721' : 'ERC20' });
   }
   return (
     <div>
       <ETHPanel account={account} />
-      {contracts.length > 0
-        ? contracts.map((contract, i) =>
-            <ERC20Panel key={i} account={account} contract={contract} />
+      {Object.keys(contracts).length > 0
+        ? Object.keys(contracts).map((contract, i) =>
+            <React.Fragment key={i}>
+            {contracts[contract] === 'ERC20'
+              ? <ERC20Panel account={account} contract={contract} />
+              : null
+            }
+            {contracts[contract] === 'ERC721'
+              ? <ERC721Panel account={account} contract={contract} />
+              : null
+            }
+            </React.Fragment>
           )
         : 'Empty token list'
       }
-      <ERC20AddForm onAddToken={onAddToken} />
+      <AddTokenForm onAddToken={onAddToken} />
     </div>
   );
 }

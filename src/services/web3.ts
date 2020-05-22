@@ -17,6 +17,12 @@ const ERC20_METADATA_ABI = require('../contracts/ERC20Metadata.json');
 const ERC20_ABI = require('../contracts/ERC20.json');
 const ERC721_METADATA_ABI = require('../contracts/ERC721Metadata.json');
 const ERC721_ABI = require('../contracts/ERC721.json');
+const ERC721_ENUMERABLE_ABI = require('../contracts/ERC721Enumerable.json');
+const ERC165_ABI = require('../contracts/ERC165.json');
+
+const ERC721_METADATA_INTERFACE_ID = '0x5b5e139f';
+const ERC721_INTERFACE_ID = '0x80ac58cd';
+const ERC721_ENUMERABLE_INTERFACE_ID = '0x780e9d63';
 
 function toCents(amount: string, decimals: number): string {
   return (Number(amount) * (10 ** decimals)).toFixed(0);
@@ -103,6 +109,66 @@ export async function getERC20Balance(account: string, contract: string): Promis
 export async function transferERC20(account: string, contract: string, address: string, amount: string): Promise<void> {
   const decimals = await ERC20_decimals(contract);
   return ERC20_transfer(account, contract, address, toCents(amount, decimals));
+}
+
+async function ERC721_name(contract: string): Promise<string> {
+  const abi = new web3.eth.Contract(ERC721_METADATA_ABI, contract);
+  return abi.methods.name().call();
+}
+
+async function ERC721_symbol(contract: string): Promise<string> {
+  const abi = new web3.eth.Contract(ERC721_METADATA_ABI, contract);
+  return abi.methods.symbol().call();
+}
+
+async function ERC721_balanceOf(contract: string, address: string): Promise<string> {
+  const abi = new web3.eth.Contract(ERC721_ABI, contract);
+  return abi.methods.balanceOf(address).call();
+}
+
+async function ERC721_tokenOfOwnerByIndex(contract: string, address: string, index: string): Promise<string> {
+  const abi = new web3.eth.Contract(ERC721_ENUMERABLE_ABI, contract);
+  return abi.methods.tokenOfOwnerByIndex(address, index).call();
+}
+
+async function ERC721_safeTransferFrom(account: string, contract: string, address: string, tokenId: string, data: string): Promise<void> {
+  const abi = new web3.eth.Contract(ERC721_ABI, contract);
+  return new Promise((resolve, reject) => {
+    abi.methods.safeTransferFrom(account, address, tokenId, data)
+      .send({ from: account })
+      .once('confirmation', (confNumber: any, receipt: any) => resolve())
+      .once('error', reject);
+  });
+}
+
+export async function getERC721Name(contract: string): Promise<string> {
+  return ERC721_name(contract);
+}
+
+export async function getERC721Symbol(contract: string): Promise<string> {
+  return ERC721_symbol(contract);
+}
+
+export async function getERC721Balance(account: string, contract: string): Promise<string> {
+  const balance = await ERC721_balanceOf(contract, account);
+  return fromCents(balance, 0);
+}
+
+export async function getERC721TokenIdByIndex(account: string, contract: string, index: number): Promise<string> {
+  return ERC721_tokenOfOwnerByIndex(contract, account, String(index));
+}
+
+export async function transferERC721(account: string, contract: string, address: string, tokenId: string, data: string): Promise<void> {
+  return ERC721_safeTransferFrom(account, contract, address, tokenId, data);
+}
+
+export async function supportsERC721(contract: string): Promise<boolean> {
+  return ERC165_supportsInterface(contract, ERC721_INTERFACE_ID);
+}
+
+async function ERC165_supportsInterface(contract: string, interfaceId: string): Promise<boolean> {
+  const abi = new web3.eth.Contract(ERC165_ABI, contract);
+  return abi.methods.supportsInterface(interfaceId).call();
 }
 
 /*
