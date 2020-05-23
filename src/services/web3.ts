@@ -36,6 +36,11 @@ export function isValidAddress(address: string): boolean {
   return web3.utils.isAddress(address);
 }
 
+export async function resolveName(name: string): Promise<string> {
+  if (/^0x[0-9A-Fa-f]{40}$/.test(name)) return name;
+  return web3.eth.ens.getAddress(name);
+}
+
 export async function getAccounts(): Promise<string[]> {
   return new Promise((resolve, reject) => {
     web3.eth.getAccounts((error, accounts) => {

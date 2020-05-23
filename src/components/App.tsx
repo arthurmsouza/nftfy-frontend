@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   isValidAddress,
+  resolveName,
   getAccounts,
   getETHBalance,
   transferETH,
@@ -41,8 +42,9 @@ function ETHTransferForm({ onTransfer } : { onTransfer: (address: string, amount
   const [amount, setAmount] = useState('');
   async function onSubmit(event: React.FormEvent) {
     if (event) event.preventDefault();
-    if (!isValidAddress(address)) return;
-    await onTransfer(address, amount);
+    const xaddress = await resolveName(address);
+    if (!isValidAddress(xaddress)) return;
+    await onTransfer(xaddress, amount);
     setAddress('');
     setAmount('');
   }
@@ -89,8 +91,9 @@ function ERC20TransferForm({ onTransfer } : { onTransfer: (address: string, amou
   const [amount, setAmount] = useState('');
   async function onSubmit(event: React.FormEvent) {
     if (event) event.preventDefault();
-    if (!isValidAddress(address)) return;
-    await onTransfer(address, amount);
+    const xaddress = await resolveName(address);
+    if (!isValidAddress(xaddress)) return;
+    await onTransfer(xaddress, amount);
     setAddress('');
     setAmount('');
   }
@@ -149,8 +152,9 @@ function ERC721TransferForm({ onTransfer } : { onTransfer: (address: string, tok
   const [tokenId, setTokenId] = useState('');
   async function onSubmit(event: React.FormEvent) {
     if (event) event.preventDefault();
-    if (!isValidAddress(address)) return;
-    await onTransfer(address, tokenId);
+    const xaddress = await resolveName(address);
+    if (!isValidAddress(xaddress)) return;
+    await onTransfer(xaddress, tokenId);
     setAddress('');
     setTokenId('');
   }
@@ -167,8 +171,9 @@ function AddTokenForm({ onAddToken } : { onAddToken: (contract: string) => Promi
   const [address, setAddress] = useState('');
   async function onSubmit(event: React.FormEvent) {
     if (event) event.preventDefault();
-    if (!isValidAddress(address)) return;
-    await onAddToken(address);
+    const xaddress = await resolveName(address);
+    if (!isValidAddress(xaddress)) return;
+    await onAddToken(xaddress);
     setAddress('');
   }
   return (
