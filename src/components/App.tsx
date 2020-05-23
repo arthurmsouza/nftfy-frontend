@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Button, Input, Layout, Select } from 'antd';
 import {
   isValidAddress,
   resolveName,
@@ -17,6 +18,9 @@ import {
   transferERC721,
   supportsERC721,
 } from '../services/web3';
+
+const { Content } = Layout;
+const { Option } = Select;
 
 function ETHPanel({ account }: { account: string }) {
   const [balance, setBalance] = useState('');
@@ -52,7 +56,7 @@ function ETHTransferForm({ onTransfer } : { onTransfer: (address: string, amount
       <form onSubmit={onSubmit}>
         <input name="address" type="string" value={address} onChange={(e) => setAddress(e.target.value)} />
         <input name="amount" type="string" value={amount} onChange={(e) => setAmount(e.target.value)} />
-        <button type="submit">Transfer</button>
+        <Button htmlType="submit">Transfer</Button>
       </form>
   );
 }
@@ -101,7 +105,7 @@ function ERC20TransferForm({ onTransfer } : { onTransfer: (address: string, amou
     <form onSubmit={onSubmit}>
       <input name="address" type="string" value={address} onChange={(e) => setAddress(e.target.value)} />
       <input name="amount" type="string" value={amount} onChange={(e) => setAmount(e.target.value)} />
-      <button type="submit">Transfer</button>
+      <Button htmlType="submit">Transfer</Button>
     </form>
   );
 }
@@ -162,7 +166,7 @@ function ERC721TransferForm({ onTransfer } : { onTransfer: (address: string, tok
     <form onSubmit={onSubmit}>
       <input name="address" type="string" value={address} onChange={(e) => setAddress(e.target.value)} />
       <input name="tokenId" type="string" value={tokenId} onChange={(e) => setTokenId(e.target.value)} />
-      <button type="submit">Transfer</button>
+      <Button htmlType="submit">Transfer</Button>
     </form>
   );
 }
@@ -178,8 +182,8 @@ function AddTokenForm({ onAddToken } : { onAddToken: (contract: string) => Promi
   }
   return (
       <form onSubmit={onSubmit}>
-        <input name="address" type="string" value={address} onChange={(e) => setAddress(e.target.value)} />
-        <button type="submit">Add Token</button>
+        <Input value={address} onChange={(e) => setAddress(e.target.value)} />
+        <Button type="primary" shape="round" htmlType="submit">Add Token</Button>
       </form>
   );
 }
@@ -236,24 +240,26 @@ function App() {
     setAccount(accounts[0]);
   }, [accounts])
   return (
-    <div className="App">
-      {accounts
-        ? (<select onChange={(e) => setAccount(e.target.value)} value={account}>
-            {account === ''
-              ? (<option key={0} value={''}>No account selected</option>)
-              : null
-            }
-            {accounts.map((account, i) =>
-              <option key={i+1} value={account}>{account}</option>
-            )}
-          </select>)
-        : 'No accounts available'
-      }
-      {account
-        ? <AccountPanel account={account} />
-        : null
-      }
-    </div>
+    <Layout>
+      <Content>
+        {accounts
+          ? (<Select value={account} onChange={(value) => setAccount(value)}>
+              {account === ''
+                ? (<Option key={0} value={''}>No account selected</Option>)
+                : null
+              }
+              {accounts.map((account, i) =>
+                <Option key={i+1} value={account}>{account}</Option>
+              )}
+            </Select>)
+          : 'No accounts available'
+        }
+        {account
+          ? <AccountPanel account={account} />
+          : null
+        }
+      </Content>
+    </Layout>
   );
 }
 
