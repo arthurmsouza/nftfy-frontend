@@ -17,6 +17,8 @@ import {
   getERC721TokenIdByIndex,
   transferERC721,
   supportsERC721,
+  getWrapper,
+  wrap,
 } from '../services/web3';
 
 const { Content } = Layout;
@@ -115,9 +117,12 @@ function ERC721Panel({ account, contract }: { account: string; contract: string 
   const [_symbol, setSymbol] = useState('');
   const [balance, setBalance] = useState('');
   const [tokens, setTokens] = useState<{ [token: string]: string }>({});
+  const [wrapper, setWrapper] = useState('');
+  const [wokens, setWokens] = useState<{ [token: string]: string }>({});
   useEffect(() => { updateName() }, [contract]);
   useEffect(() => { updateSymbol() }, [contract]);
   useEffect(() => { updateBalance() }, [account, contract]);
+  useEffect(() => { updateWrapper() }, [contract]);
   async function updateName() {
     setName(await getERC721Name(contract));
   }
@@ -135,18 +140,41 @@ function ERC721Panel({ account, contract }: { account: string; contract: string 
     setBalance(balance);
     setTokens(tokens);
   }
+  async function updateWrapper() {
+    const wrapper = await getWrapper(contract);
+    const wokens: { [token: string]: string } = {};
+    if (wrapper != '0x0000000000000000000000000000000000000000') {
+      const balance = await getERC721Balance(account, wrapper);
+      for (let i = 0; i < Number(balance); i++) {
+        const tokenId = await getERC721TokenIdByIndex(account, wrapper, i);
+        const tokenURI = await getERC721TokenURI(wrapper, tokenId);
+        wokens[tokenId] = tokenURI;
+      }
+    }
+    setWrapper(wrapper);
+    setWokens(wokens);
+  }
   async function onTransfer(address: string, tokenId: string) {
-    await transferERC721(account, contract, address, tokenId, '0x');
+    await transferERC721(account, contract, address, tokenId);
+    await updateBalance();
+  }
+  async function onWrap(tokenId: string, amount: string) {
+    await wrap(account, contract, tokenId, amount);
     await updateBalance();
   }
   return (
     <div>
       {name} {contract}<br/>
+      <label>Wrapper</label> {wrapper}<br/>
       <label>Balance</label> {balance} {_symbol}
       {Object.keys(tokens).map((token, i) =>
         <div key={i}>Token {token} {tokens[token]}</div>
       )}
+      {Object.keys(wokens).map((woken, i) =>
+        <div key={i}>Wrapped Token {woken} {wokens[woken]}</div>
+      )}
       <ERC721TransferForm onTransfer={onTransfer} />
+      <ERC721WrapForm onWrap={onWrap} />
     </div>
   );
 }
@@ -167,6 +195,24 @@ function ERC721TransferForm({ onTransfer } : { onTransfer: (address: string, tok
       <input name="address" type="string" value={address} onChange={(e) => setAddress(e.target.value)} />
       <input name="tokenId" type="string" value={tokenId} onChange={(e) => setTokenId(e.target.value)} />
       <Button htmlType="submit">Transfer</Button>
+    </form>
+  );
+}
+
+function ERC721WrapForm({ onWrap } : { onWrap: (tokenId: string, price: string) => Promise<void> }) {
+  const [tokenId, setTokenId] = useState('');
+  const [amount, setAmount] = useState('');
+  async function onSubmit(event: React.FormEvent) {
+    if (event) event.preventDefault();
+    await onWrap(tokenId, amount);
+    setTokenId('');
+    setAmount('');
+  }
+  return (
+    <form onSubmit={onSubmit}>
+      <input name="tokenId" type="string" value={tokenId} onChange={(e) => setTokenId(e.target.value)} />
+      <input name="amount" type="string" value={amount} onChange={(e) => setAmount(e.target.value)} />
+      <Button htmlType="submit">Wrap</Button>
     </form>
   );
 }

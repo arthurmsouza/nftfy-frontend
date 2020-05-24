@@ -18,7 +18,7 @@ if (!window.web3) {
 
 const web3 = new Web3(window.web3.currentProvider);
 
-const NFTFY_CONTRACT_RINKEBY = '0xEb18235d49853c7a5e926f99b4B9fdeedC10A8cF';
+const NFTFY_CONTRACT_RINKEBY = '0x4eBfB8B276E10aFADA193a9385B7Cd322ddF624e';
 
 const NFTFY_ABI = require('../contracts/Nftfy.json');
 const WRAPPER_ABI = require('../contracts/Wrapper.json');
@@ -192,7 +192,7 @@ export async function getERC721TokenIdByIndex(account: string, contract: string,
   return ERC721_tokenOfOwnerByIndex(contract, account, String(index));
 }
 
-export async function transferERC721(account: string, contract: string, address: string, tokenId: string, data: string): Promise<void> {
+export async function transferERC721(account: string, contract: string, address: string, tokenId: string, data = '0x'): Promise<void> {
   return ERC721_safeTransferFrom(account, contract, address, tokenId, data);
 }
 
@@ -240,8 +240,16 @@ async function Shares_redeem(account: string, contract: string): Promise<void> {
   });
 }
 
-export async function getWrapper(contract: string, address: string): Promise<string> {
+export async function getWrapper(address: string): Promise<string> {
+  const contract = await getNftfyContract();
   return Nftfy_getWrapper(contract, address);
+}
+
+export async function wrap(account: string, contract: string, tokenId: string, amount: string): Promise<void> {
+  const address = await getNftfyContract();
+  let data = web3.utils.toHex(web3.utils.toWei(amount, 'ether'));
+  data = data.substr(0, 2) + data.substr(2).padStart(64, '0');
+  await transferERC721(account, contract, address, tokenId, data);
 }
 
 export async function getShares(contract: string, tokenId: string): Promise<string> {
