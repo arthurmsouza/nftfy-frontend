@@ -21,6 +21,7 @@ import {
   wrap,
   getShares,
   release,
+  redeem,
 } from '../services/web3';
 
 const { Content } = Layout;
@@ -85,11 +86,16 @@ function ERC20Panel({ account, contract }: { account: string; contract: string }
     await transferERC20(account, contract, address, amount);
     await updateBalance();
   }
+  async function onRedeem() {
+    await redeem(account, contract);
+    await updateBalance();
+  }
   return (
     <div>
       {name} {contract}<br/>
       <label>Balance</label> {balance} {_symbol}
       <ERC20TransferForm onTransfer={onTransfer} />
+      <ERC20RedeemForm onRedeem={onRedeem} />
     </div>
   );
 }
@@ -110,6 +116,18 @@ function ERC20TransferForm({ onTransfer } : { onTransfer: (address: string, amou
       <input name="address" type="string" value={address} onChange={(e) => setAddress(e.target.value)} />
       <input name="amount" type="string" value={amount} onChange={(e) => setAmount(e.target.value)} />
       <Button htmlType="submit">Transfer</Button>
+    </form>
+  );
+}
+
+function ERC20RedeemForm({ onRedeem } : { onRedeem: () => Promise<void> }) {
+  async function onSubmit(event: React.FormEvent) {
+    if (event) event.preventDefault();
+    await onRedeem();
+  }
+  return (
+    <form onSubmit={onSubmit}>
+      <Button htmlType="submit">Redeem</Button>
     </form>
   );
 }
