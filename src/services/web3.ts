@@ -18,6 +18,12 @@ if (!window.web3) {
 
 const web3 = new Web3(window.web3.currentProvider);
 
+const NFTFY_CONTRACT_RINKEBY = '0xEb18235d49853c7a5e926f99b4B9fdeedC10A8cF';
+
+const NFTFY_ABI = require('../contracts/Nftfy.json');
+const WRAPPER_ABI = require('../contracts/Wrapper.json');
+const SHARES_ABI = require('../contracts/Shares.json');
+
 const ERC20_METADATA_ABI = require('../contracts/ERC20Metadata.json');
 const ERC20_ABI = require('../contracts/ERC20.json');
 const ERC721_METADATA_ABI = require('../contracts/ERC721Metadata.json');
@@ -28,6 +34,15 @@ const ERC165_ABI = require('../contracts/ERC165.json');
 // const ERC721_METADATA_INTERFACE_ID = '0x5b5e139f';
 const ERC721_INTERFACE_ID = '0x80ac58cd';
 // const ERC721_ENUMERABLE_INTERFACE_ID = '0x780e9d63';
+
+export async function getNftfyContract(): Promise<string> {
+  const network = await web3.eth.net.getNetworkType();
+  switch (network) {
+  // TODO main
+  case 'rinkeby': return NFTFY_CONTRACT_RINKEBY;
+  default: throw new Error('Unsupported network');
+  }
+}
 
 function toCents(amount: string, decimals: number): string {
   return (Number(amount) * (10 ** decimals)).toFixed(0);
@@ -189,3 +204,59 @@ async function ERC165_supportsInterface(contract: string, interfaceId: string): 
   const abi = new web3.eth.Contract(ERC165_ABI, contract);
   return abi.methods.supportsInterface(interfaceId).call();
 }
+
+async function Nftfy_getWrapper(contract: string, address: string): Promise<string> {
+  const abi = new web3.eth.Contract(NFTFY_ABI, contract);
+  return abi.methods.getWrapper(address).call();
+}
+
+async function Wrapper_getShares(contract: string, tokenId: string): Promise<string> {
+  const abi = new web3.eth.Contract(WRAPPER_ABI, contract);
+  return abi.methods.getShares(tokenId).call();
+}
+
+async function Shares_isRedeemable(contract: string): Promise<boolean> {
+  const abi = new web3.eth.Contract(SHARES_ABI, contract);
+  return abi.methods.isRedeemable().call();
+}
+
+async function Shares_release(account: string, contract: string): Promise<void> {
+  const abi = new web3.eth.Contract(SHARES_ABI, contract);
+  return new Promise((resolve, reject) => {
+    abi.methods.release()
+      .send({ from: account })
+      .once('confirmation', (confNumber: any, receipt: any) => resolve())
+      .once('error', reject);
+  });
+}
+
+async function Shares_redeem(account: string, contract: string): Promise<void> {
+  const abi = new web3.eth.Contract(SHARES_ABI, contract);
+  return new Promise((resolve, reject) => {
+    abi.methods.redeem()
+      .send({ from: account })
+      .once('confirmation', (confNumber: any, receipt: any) => resolve())
+      .once('error', reject);
+  });
+}
+
+export async function getWrapper(contract: string, address: string): Promise<string> {
+  return Nftfy_getWrapper(contract, address);
+}
+
+export async function getShares(contract: string, tokenId: string): Promise<string> {
+  return Wrapper_getShares(contract, tokenId);
+}
+
+export async function isRedeemable(contract: string): Promise<boolean> {
+  return Shares_isRedeemable(contract);
+}
+
+export async function release(account: string, contract: string): Promise<void> {
+  return Shares_release(account, contract);
+}
+
+export async function redeem(account: string, contract: string): Promise<void> {
+  return Shares_redeem(account, contract);
+}
+
