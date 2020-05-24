@@ -18,7 +18,7 @@ if (!window.web3) {
 
 const web3 = new Web3(window.web3.currentProvider);
 
-const NFTFY_CONTRACT_RINKEBY = '0x4eBfB8B276E10aFADA193a9385B7Cd322ddF624e';
+const NFTFY_CONTRACT_RINKEBY = '0x880a1F58428Bdee025663579C8dC3703abCe5E11';
 
 const NFTFY_ABI = require('../contracts/Nftfy.json');
 const WRAPPER_ABI = require('../contracts/Wrapper.json');
@@ -220,11 +220,11 @@ async function Shares_isRedeemable(contract: string): Promise<boolean> {
   return abi.methods.isRedeemable().call();
 }
 
-async function Shares_release(account: string, contract: string): Promise<void> {
+async function Shares_release(account: string, contract: string, amount: string): Promise<void> {
   const abi = new web3.eth.Contract(SHARES_ABI, contract);
   return new Promise((resolve, reject) => {
     abi.methods.release()
-      .send({ from: account })
+      .send({ from: account, value: amount })
       .once('confirmation', (confNumber: any, receipt: any) => resolve())
       .once('error', reject);
   });
@@ -260,8 +260,8 @@ export async function isRedeemable(contract: string): Promise<boolean> {
   return Shares_isRedeemable(contract);
 }
 
-export async function release(account: string, contract: string): Promise<void> {
-  return Shares_release(account, contract);
+export async function release(account: string, contract: string, amount: string): Promise<void> {
+  return Shares_release(account, contract, web3.utils.toWei(amount, 'ether'));
 }
 
 export async function redeem(account: string, contract: string): Promise<void> {
