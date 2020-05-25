@@ -18,7 +18,7 @@ if (!window.web3) {
 
 const web3 = new Web3(window.web3.currentProvider);
 
-const NFTFY_CONTRACT_RINKEBY = '0xCF6341ad3BC89E99e2bE101a430f7735DF01944D';
+const NFTFY_CONTRACT_RINKEBY = '0xc0D1946C1754d2F94dE4Cf52deF7162f6611316D';
 
 const NFTFY_ABI = require('../contracts/Nftfy.json');
 const WRAPPER_ABI = require('../contracts/Wrapper.json');
