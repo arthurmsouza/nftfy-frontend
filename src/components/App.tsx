@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Input, Layout, Select } from 'antd';
+import { Avatar, Button, Card, Divider, Input, Layout, Select, Space, Statistic } from 'antd';
+// import { Pie } from 'ant-design-pro/lib/Charts';
 import {
   isValidAddress,
   resolveName,
@@ -20,11 +21,12 @@ import {
   getWrapper,
   wrap,
   getShares,
+  isRedeemable,
   release,
   redeem,
 } from '../services/web3';
 
-const { Content } = Layout;
+const { Content, Footer, Header } = Layout;
 const { Option } = Select;
 
 function ETHPanel({ account }: { account: string }) {
@@ -38,30 +40,44 @@ function ETHPanel({ account }: { account: string }) {
     await updateBalance();
   }
   return (
-    <div>
-      Ethereum {account}<br/>
-      <label>Balance</label> {balance} ETH
-      <ETHTransferForm onTransfer={onTransfer} />
-    </div>
+    <Card>
+      <Space direction="vertical">
+        <Space>
+          <Avatar size="large">ETH</Avatar>
+          Ether
+        </Space>
+        <Statistic title="Balance" value={balance} />
+        <Divider>Actions</Divider>
+        <ETHTransferForm onTransfer={onTransfer} />
+      </Space>
+    </Card>
   );
 }
 
 function ETHTransferForm({ onTransfer } : { onTransfer: (address: string, amount: string) => Promise<void> }) {
   const [address, setAddress] = useState('');
   const [amount, setAmount] = useState('');
+  const [loading, setLoading] = useState(false);
   async function onSubmit(event: React.FormEvent) {
     if (event) event.preventDefault();
-    const xaddress = await resolveName(address);
-    if (!isValidAddress(xaddress)) return;
-    await onTransfer(xaddress, amount);
-    setAddress('');
-    setAmount('');
+    setLoading(true);
+    try {
+      const xaddress = await resolveName(address);
+      if (!isValidAddress(xaddress)) return;
+      await onTransfer(xaddress, amount);
+      setAddress('');
+      setAmount('');
+    } finally {
+      setLoading(false);
+    }
   }
   return (
       <form onSubmit={onSubmit}>
-        <input name="address" type="string" value={address} onChange={(e) => setAddress(e.target.value)} />
-        <input name="amount" type="string" value={amount} onChange={(e) => setAmount(e.target.value)} />
-        <Button htmlType="submit">Transfer</Button>
+        <Space>
+          <Input addonAfter="ETH" placeholder="amount" defaultValue={amount} onChange={(e) => setAmount(e.target.value)} />
+          <Input addonBefore="@" placeholder="receiver" defaultValue={address} onChange={(e) => setAddress(e.target.value)} />
+          <Button loading={loading} htmlType="submit">Transfer</Button>
+        </Space>
       </form>
   );
 }
@@ -70,9 +86,11 @@ function ERC20Panel({ account, contract }: { account: string; contract: string }
   const [name, setName] = useState('');
   const [_symbol, setSymbol] = useState('');
   const [balance, setBalance] = useState('');
+  const [redeemable, setRedeemable] = useState(false);
   useEffect(() => { updateName() }, [contract]);
   useEffect(() => { updateSymbol() }, [contract]);
   useEffect(() => { updateBalance() }, [account, contract]);
+  useEffect(() => { updateRedeemable() }, [contract]);
   async function updateName() {
     setName(await getERC20Name(contract));
   }
@@ -81,6 +99,9 @@ function ERC20Panel({ account, contract }: { account: string; contract: string }
   }
   async function updateBalance() {
     setBalance(await getERC20Balance(account, contract));
+  }
+  async function updateRedeemable() {
+    setRedeemable(await isRedeemable(contract));
   }
   async function onTransfer(address: string, amount: string) {
     await transferERC20(account, contract, address, amount);
@@ -91,43 +112,68 @@ function ERC20Panel({ account, contract }: { account: string; contract: string }
     await updateBalance();
   }
   return (
-    <div>
-      {name} {contract}<br/>
-      <label>Balance</label> {balance} {_symbol}
-      <ERC20TransferForm onTransfer={onTransfer} />
-      <ERC20RedeemForm onRedeem={onRedeem} />
-    </div>
+    <Card>
+      <Space direction="vertical">
+        <Space>
+          <Avatar size="large">{_symbol}</Avatar>
+          {name}
+        </Space>
+        <Statistic title="Balance" value={balance} />
+        <Divider>Actions</Divider>
+        <ERC20TransferForm _symbol={_symbol} onTransfer={onTransfer} />
+        {redeemable && Number(balance) > 0
+          ? (<ERC20RedeemForm onRedeem={onRedeem} />)
+          : null
+        }
+      </Space>
+    </Card>
   );
 }
 
-function ERC20TransferForm({ onTransfer } : { onTransfer: (address: string, amount: string) => Promise<void> }) {
+function ERC20TransferForm({ _symbol, onTransfer } : { _symbol: string; onTransfer: (address: string, amount: string) => Promise<void> }) {
   const [address, setAddress] = useState('');
   const [amount, setAmount] = useState('');
+  const [loading, setLoading] = useState(false);
   async function onSubmit(event: React.FormEvent) {
     if (event) event.preventDefault();
-    const xaddress = await resolveName(address);
-    if (!isValidAddress(xaddress)) return;
-    await onTransfer(xaddress, amount);
-    setAddress('');
-    setAmount('');
+    setLoading(true);
+    try {
+      const xaddress = await resolveName(address);
+      if (!isValidAddress(xaddress)) return;
+      await onTransfer(xaddress, amount);
+      setAddress('');
+      setAmount('');
+    } finally {
+      setLoading(false);
+    }
   }
   return (
     <form onSubmit={onSubmit}>
-      <input name="address" type="string" value={address} onChange={(e) => setAddress(e.target.value)} />
-      <input name="amount" type="string" value={amount} onChange={(e) => setAmount(e.target.value)} />
-      <Button htmlType="submit">Transfer</Button>
+      <Space>
+        <Input addonAfter={_symbol} placeholder="amount" defaultValue={amount} onChange={(e) => setAmount(e.target.value)} />
+        <Input addonBefore="@" placeholder="receiver" defaultValue={address} onChange={(e) => setAddress(e.target.value)} />
+        <Button loading={loading} htmlType="submit">Transfer</Button>
+      </Space>
     </form>
   );
 }
 
 function ERC20RedeemForm({ onRedeem } : { onRedeem: () => Promise<void> }) {
+  const [loading, setLoading] = useState(false);
   async function onSubmit(event: React.FormEvent) {
     if (event) event.preventDefault();
-    await onRedeem();
+    setLoading(true);
+    try {
+      await onRedeem();
+    } finally {
+      setLoading(false);
+    }
   }
   return (
     <form onSubmit={onSubmit}>
-      <Button htmlType="submit">Redeem</Button>
+      <Space>
+        <Button loading={loading} htmlType="submit">Redeem</Button>
+      </Space>
     </form>
   );
 }
@@ -189,39 +235,51 @@ function ERC721Panel({ account, contract }: { account: string; contract: string 
     await updateBalance();
   }
   return (
-    <div>
-      {name} {contract}<br/>
-      <label>Wrapper</label> {wrapper}<br/>
-      <label>Balance</label> {balance} {_symbol}
-      {Object.keys(tokens).map((token, i) =>
-        <div key={i}>Token {token} {tokens[token].tokenURI}</div>
-      )}
-      {Object.keys(wokens).map((woken, i) =>
-        <div key={i}>Wrapped Token {woken} {wokens[woken].tokenURI} {wokens[woken].shares}</div>
-      )}
-      <ERC721TransferForm onTransfer={onTransfer} />
-      <ERC721WrapForm onWrap={onWrap} />
-      <ERC721UnwrapForm onUnwrap={onUnwrap} />
-    </div>
+    <Card>
+      <Space direction="vertical">
+        <Space>
+          <Avatar size="large">{_symbol}</Avatar>
+          {name}
+        </Space>
+        {Object.keys(tokens).map((token, i) =>
+          <div key={i}>Token {token} {/*tokens[token].tokenURI*/}</div>
+        )}
+        {Object.keys(wokens).map((woken, i) =>
+          <div key={i}>Wrapped Token {woken} {wokens[woken].tokenURI} {wokens[woken].shares}</div>
+        )}
+        <Divider>Actions</Divider>
+        <ERC721TransferForm onTransfer={onTransfer} />
+        <ERC721WrapForm onWrap={onWrap} />
+        <ERC721UnwrapForm onUnwrap={onUnwrap} />
+      </Space>
+    </Card>
   );
 }
 
 function ERC721TransferForm({ onTransfer } : { onTransfer: (address: string, tokenId: string) => Promise<void> }) {
   const [address, setAddress] = useState('');
   const [tokenId, setTokenId] = useState('');
+  const [loading, setLoading] = useState(false);
   async function onSubmit(event: React.FormEvent) {
     if (event) event.preventDefault();
-    const xaddress = await resolveName(address);
-    if (!isValidAddress(xaddress)) return;
-    await onTransfer(xaddress, tokenId);
-    setAddress('');
-    setTokenId('');
+    setLoading(true);
+    try {
+      const xaddress = await resolveName(address);
+      if (!isValidAddress(xaddress)) return;
+      await onTransfer(xaddress, tokenId);
+      setAddress('');
+      setTokenId('');
+    } finally {
+      setLoading(false);
+    }
   }
   return (
     <form onSubmit={onSubmit}>
-      <input name="address" type="string" value={address} onChange={(e) => setAddress(e.target.value)} />
-      <input name="tokenId" type="string" value={tokenId} onChange={(e) => setTokenId(e.target.value)} />
-      <Button htmlType="submit">Transfer</Button>
+      <Space>
+        <Input addonBefore="#" placeholder="token" defaultValue={tokenId} onChange={(e) => setTokenId(e.target.value)} />
+        <Input addonBefore="@" placeholder="receiver" defaultValue={address} onChange={(e) => setAddress(e.target.value)} />
+        <Button loading={loading} htmlType="submit">Transfer</Button>
+      </Space>
     </form>
   );
 }
@@ -229,17 +287,25 @@ function ERC721TransferForm({ onTransfer } : { onTransfer: (address: string, tok
 function ERC721WrapForm({ onWrap } : { onWrap: (tokenId: string, amount: string) => Promise<void> }) {
   const [tokenId, setTokenId] = useState('');
   const [amount, setAmount] = useState('');
+  const [loading, setLoading] = useState(false);
   async function onSubmit(event: React.FormEvent) {
     if (event) event.preventDefault();
-    await onWrap(tokenId, amount);
-    setTokenId('');
-    setAmount('');
+    setLoading(true);
+    try {
+      await onWrap(tokenId, amount);
+      setTokenId('');
+      setAmount('');
+    } finally {
+      setLoading(false);
+    }
   }
   return (
     <form onSubmit={onSubmit}>
-      <input name="tokenId" type="string" value={tokenId} onChange={(e) => setTokenId(e.target.value)} />
-      <input name="amount" type="string" value={amount} onChange={(e) => setAmount(e.target.value)} />
-      <Button htmlType="submit">Wrap</Button>
+      <Space>
+        <Input addonBefore="#" placeholder="token" defaultValue={tokenId} onChange={(e) => setTokenId(e.target.value)} />
+        <Input addonAfter="ETH" placeholder="exit price" defaultValue={amount} onChange={(e) => setAmount(e.target.value)} />
+        <Button loading={loading} htmlType="submit">Securitize</Button>
+      </Space>
     </form>
   );
 }
@@ -247,34 +313,50 @@ function ERC721WrapForm({ onWrap } : { onWrap: (tokenId: string, amount: string)
 function ERC721UnwrapForm({ onUnwrap } : { onUnwrap: (tokenId: string, amount: string) => Promise<void> }) {
   const [tokenId, setTokenId] = useState('');
   const [amount, setAmount] = useState('');
+  const [loading, setLoading] = useState(false);
   async function onSubmit(event: React.FormEvent) {
     if (event) event.preventDefault();
-    await onUnwrap(tokenId, amount);
-    setTokenId('');
-    setAmount('');
+    setLoading(true);
+    try {
+      await onUnwrap(tokenId, amount);
+      setTokenId('');
+      setAmount('');
+    } finally {
+      setLoading(false);
+    }
   }
   return (
     <form onSubmit={onSubmit}>
-      <input name="tokenId" type="string" value={tokenId} onChange={(e) => setTokenId(e.target.value)} />
-      <input name="amount" type="string" value={amount} onChange={(e) => setAmount(e.target.value)} />
-      <Button htmlType="submit">Unwrap</Button>
+      <Space>
+        <Input addonBefore="#" placeholder="token" defaultValue={tokenId} onChange={(e) => setTokenId(e.target.value)} />
+        <Input addonAfter="ETH" placeholder="premium" defaultValue={amount} onChange={(e) => setAmount(e.target.value)} />
+        <Button loading={loading}  htmlType="submit">Release</Button>
+      </Space>
     </form>
   );
 }
 
 function AddTokenForm({ onAddToken } : { onAddToken: (contract: string) => Promise<void> }) {
   const [address, setAddress] = useState('');
+  const [loading, setLoading] = useState(false);
   async function onSubmit(event: React.FormEvent) {
     if (event) event.preventDefault();
-    const xaddress = await resolveName(address);
-    if (!isValidAddress(xaddress)) return;
-    await onAddToken(xaddress);
-    setAddress('');
+    setLoading(true);
+    try {
+      const xaddress = await resolveName(address);
+      if (!isValidAddress(xaddress)) return;
+      await onAddToken(xaddress);
+      setAddress('');
+    } finally {
+      setLoading(false);
+    }
   }
   return (
       <form onSubmit={onSubmit}>
-        <Input value={address} onChange={(e) => setAddress(e.target.value)} />
-        <Button type="primary" shape="round" htmlType="submit">Add Token</Button>
+        <Space>
+          <Input addonBefore="@" placeholder="contract address" value={address} onChange={(e) => setAddress(e.target.value)} />
+          <Button type="primary" loading={loading} htmlType="submit">Add Token</Button>
+        </Space>
       </form>
   );
 }
@@ -289,7 +371,8 @@ function Wallet({ account }: { account: string }) {
     setContracts({ ...contracts, [address]: isNFT ? 'ERC721' : 'ERC20' });
   }
   return (
-    <div>
+    <Space direction="vertical">
+      <AddTokenForm onAddToken={onAddToken} />
       <ETHPanel account={account} />
       {Object.keys(contracts).length > 0
         ? Object.keys(contracts).map((contract, i) =>
@@ -304,10 +387,9 @@ function Wallet({ account }: { account: string }) {
             }
             </React.Fragment>
           )
-        : 'Empty token list'
+        : ''
       }
-      <AddTokenForm onAddToken={onAddToken} />
-    </div>
+    </Space>
   );
 }
 
@@ -332,7 +414,10 @@ function App() {
   }, [accounts])
   return (
     <Layout>
-      <Content>
+      <Header className="header" style={{color:"white"}}>
+        <Space>
+        <img src="https://nftfy.tk/assets/images/logo.svg" />
+        <strong>Wallet:</strong>
         {accounts
           ? (<Select value={account} onChange={(value) => setAccount(value)}>
               {account === ''
@@ -345,11 +430,15 @@ function App() {
             </Select>)
           : 'No accounts available'
         }
+        </Space>
+      </Header>
+      <Content>
         {account
           ? <AccountPanel account={account} />
           : null
         }
       </Content>
+      <Footer style={{ textAlign: 'center' }}>Nftfy ©2020 Created by BH Hackers</Footer>
     </Layout>
   );
 }
