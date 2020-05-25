@@ -220,6 +220,11 @@ async function Shares_isRedeemable(contract: string): Promise<boolean> {
   return abi.methods.isRedeemable().call();
 }
 
+async function Shares_getSharePrice(contract: string): Promise<string> {
+  const abi = new web3.eth.Contract(SHARES_ABI, contract);
+  return abi.methods.getSharePrice().call();
+}
+
 async function Shares_release(account: string, contract: string, amount: string): Promise<void> {
   const abi = new web3.eth.Contract(SHARES_ABI, contract);
   return new Promise((resolve, reject) => {
@@ -258,6 +263,11 @@ export async function getShares(contract: string, tokenId: string): Promise<stri
 
 export async function isRedeemable(contract: string): Promise<boolean> {
   return Shares_isRedeemable(contract);
+}
+
+export async function getSharePrice(contract: string): Promise<string> {
+  const price = await Shares_getSharePrice(contract);
+  return web3.utils.fromWei(price, 'ether');
 }
 
 export async function release(account: string, contract: string, amount: string): Promise<void> {
